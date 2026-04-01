@@ -8,7 +8,7 @@ load_dotenv()
 
 @dataclass
 class Config:
-    anthropic_api_key: str = field(default_factory=lambda: os.environ["ANTHROPIC_API_KEY"])
+    gemini_api_key: str = field(default_factory=lambda: os.environ["GEMINI_API_KEY"])
 
     gmail_address: str = field(default_factory=lambda: os.environ["GMAIL_ADDRESS"])
     gmail_app_password: str = field(default_factory=lambda: os.environ["GMAIL_APP_PASSWORD"])
@@ -28,8 +28,8 @@ class Config:
         default_factory=lambda: os.getenv("DRY_RUN", "false").lower() == "true"
     )
 
-    # using opus for better writing quality
-    claude_model: str = "claude-opus-4-6"
+    # gemini-2.0-flash: free tier, 1500 req/day, excellent quality
+    gemini_model: str = "gemini-2.0-flash"
 
     # supabase for subscriber storage (used by the web app)
     supabase_url: str = field(default_factory=lambda: os.getenv("SUPABASE_URL", ""))
