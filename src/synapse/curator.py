@@ -1,10 +1,11 @@
 import json
 import logging
+import os
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import List
 
-import anthropic
+import requests
 
 from .collector import Article
 from .config import config
@@ -93,18 +94,26 @@ def curate(articles: List[Article]) -> CuratedDigest:
     top_n = min(config.top_stories, len(articles))
     prompt = _build_prompt(articles, top_n)
 
-    client = anthropic.Anthropic(api_key=config.anthropic_api_key)
-    log.info(f"calling claude with {len(articles)} articles...")
+    api_key = config.gemini_api_key
+    model = config.gemini_model
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
 
-    msg = client.messages.create(
-        model=config.claude_model,
-        max_tokens=4096,
-        messages=[{"role": "user", "content": prompt}],
-    )
+    log.info(f"calling gemini ({model}) with {len(articles)} articles...")
 
-    raw = msg.content[0].text.strip()
+    payload = {
+        "contents": [{"parts": [{"text": prompt}]}],
+        "generationConfig": {
+            "temperature": 0.4,
+            "maxOutputTokens": 4096,
+        },
+    }
 
-    # claude sometimes wraps in ```json ``` even when told not to
+    resp = requests.post(url, json=payload, timeout=120)
+    resp.raise_for_status()
+
+    raw = resp.json()["candidates"][0]["content"]["parts"][0]["text"].strip()
+
+    # gemini sometimes wraps in ```json ``` even when told not to
     if raw.startswith("```"):
         raw = raw.split("```", 2)[1]
         if raw.startswith("json"):
@@ -114,7 +123,7 @@ def curate(articles: List[Article]) -> CuratedDigest:
     try:
         data = json.loads(raw)
     except json.JSONDecodeError as e:
-        log.error(f"claude returned bad JSON: {e}")
+        log.error(f"gemini returned bad JSON: {e}\nRaw output:\n{raw[:500]}")
         raise
 
     top_stories = [
