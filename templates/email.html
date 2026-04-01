@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>{{ digest.newsletter_name }} — {{ digest.date_label() }}</title>
+  <!--
+    All styles are intentionally inlined for maximum email client compatibility.
+    This template is rendered by Jinja2 via renderer.py.
+  -->
+</head>
+<body style="
+  margin: 0;
+  padding: 0;
+  background-color: #0f0f13;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+">
+
+<!-- ═══════════════════════════════════════════════════════════════
+     OUTER WRAPPER
+════════════════════════════════════════════════════════════════ -->
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0"
+  style="background-color: #0f0f13; min-height: 100vh;">
+  <tr>
+    <td align="center" style="padding: 32px 16px;">
+
+      <!-- CARD -->
+      <table role="presentation" width="620" cellspacing="0" cellpadding="0" border="0"
+        style="
+          max-width: 620px;
+          width: 100%;
+          background-color: #16161e;
+          border-radius: 16px;
+          overflow: hidden;
+          box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+        ">
+
+        <!-- ─── HEADER ─── -->
+        <tr>
+          <td style="
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            padding: 40px 40px 32px;
+            text-align: left;
+            border-bottom: 1px solid #2a2a3e;
+          ">
+            <!-- Logo row -->
+            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+              <tr>
+                <td>
+                  <span style="
+                    display: inline-block;
+                    background: linear-gradient(135deg, #6c63ff, #a78bfa);
+                    color: #ffffff;
+                    font-size: 11px;
+                    font-weight: 700;
+                    letter-spacing: 2px;
+                    text-transform: uppercase;
+                    padding: 4px 10px;
+                    border-radius: 4px;
+                  ">AI &amp; ML</span>
+                </td>
+                <td align="right">
+                  <span style="color: #6b7280; font-size: 12px;">{{ digest.date_label() }}</span>
+                </td>
+              </tr>
+            </table>
+
+            <!-- Newsletter name -->
+            <h1 style="
+              margin: 20px 0 8px;
+              font-size: 32px;
+              font-weight: 800;
+              letter-spacing: -0.5px;
+              color: #ffffff;
+              line-height: 1.2;
+            ">⚡ {{ newsletter_name }}</h1>
+
+            <!-- Headline -->
+            <p style="
+              margin: 0;
+              font-size: 16px;
+              color: #a78bfa;
+              font-weight: 500;
+              line-height: 1.5;
+            ">{{ digest.headline }}</p>
+          </td>
+        </tr>
+
+        <!-- ─── INTRO ─── -->
+        <tr>
+          <td style="padding: 32px 40px 0;">
+            <p style="
+              margin: 0;
+              font-size: 15px;
+              line-height: 1.7;
+              color: #c4c4d4;
+              border-left: 3px solid #6c63ff;
+              padding-left: 16px;
+            ">{{ digest.intro }}</p>
+          </td>
+        </tr>
+
+        <!-- ─── DIVIDER ─── -->
+        <tr>
+          <td style="padding: 28px 40px 0;">
+            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+              <tr>
+                <td style="border-top: 1px solid #2a2a3e; font-size: 0;">&nbsp;</td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <!-- ─── TOP STORIES HEADING ─── -->
+        <tr>
+          <td style="padding: 28px 40px 0;">
+            <h2 style="
+              margin: 0 0 4px;
+              font-size: 11px;
+              font-weight: 700;
+              letter-spacing: 2px;
+              text-transform: uppercase;
+              color: #6c63ff;
+            ">🔥 Top Stories</h2>
+            <p style="margin: 0; font-size: 12px; color: #4b4b6b;">Curated &amp; ranked by ML relevance score</p>
+          </td>
+        </tr>
+
+        <!-- ─── TOP STORIES LOOP ─── -->
+        {% for story in digest.top_stories %}
+        <tr>
+          <td style="padding: {% if loop.first %}20px{% else %}0{% endif %} 40px 0;">
+            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0"
+              style="
+                background-color: #1e1e2e;
+                border-radius: 12px;
+                border: 1px solid #2a2a3e;
+                overflow: hidden;
+              ">
+              <tr>
+                <td style="padding: 24px;">
+                  <!-- Category badge + source -->
+                  <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+                    <tr>
+                      <td style="
+                        background-color: #2a1a4e;
+                        color: #a78bfa;
+                        font-size: 10px;
+                        font-weight: 700;
+                        letter-spacing: 1.5px;
+                        text-transform: uppercase;
+                        padding: 3px 8px;
+                        border-radius: 3px;
+                      ">{{ story.category }}</td>
+                      <td style="padding-left: 10px; color: #4b4b6b; font-size: 12px;">{{ story.source }}</td>
+                    </tr>
+                  </table>
+
+                  <!-- Title -->
+                  <h3 style="margin: 12px 0 10px;">
+                    <a href="{{ story.url }}" style="
+                      color: #e2e2f0;
+                      text-decoration: none;
+                      font-size: 17px;
+                      font-weight: 700;
+                      line-height: 1.4;
+                    ">{{ story.title }}</a>
+                  </h3>
+
+                  <!-- Summary -->
+                  <p style="
+                    margin: 0 0 16px;
+                    font-size: 14px;
+                    line-height: 1.7;
+                    color: #9494aa;
+                  ">{{ story.summary }}</p>
+
+                  <!-- Key takeaway -->
+                  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                    <tr>
+                      <td style="
+                        background: linear-gradient(90deg, #1a1a3e, #1e1e2e);
+                        border-left: 3px solid #6c63ff;
+                        padding: 10px 14px;
+                        border-radius: 0 6px 6px 0;
+                      ">
+                        <span style="font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #6c63ff;">Key Takeaway</span>
+                        <p style="margin: 4px 0 0; font-size: 13px; color: #c4c4d4; line-height: 1.5;">{{ story.key_takeaway }}</p>
+                      </td>
+                    </tr>
+                  </table>
+
+                  <!-- Read more link -->
+                  <p style="margin: 16px 0 0;">
+                    <a href="{{ story.url }}" style="
+                      color: #6c63ff;
+                      font-size: 13px;
+                      font-weight: 600;
+                      text-decoration: none;
+                    ">Read full story →</a>
+                  </p>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+        {% if not loop.last %}
+        <tr><td style="padding: 12px 40px 0;"></td></tr>
+        {% endif %}
+        {% endfor %}
+
+        <!-- ─── BRIEF ITEMS HEADING ─── -->
+        {% if digest.brief_items %}
+        <tr>
+          <td style="padding: 36px 40px 0;">
+            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+              <tr>
+                <td style="border-top: 1px solid #2a2a3e; font-size: 0; padding-bottom: 28px;">&nbsp;</td>
+              </tr>
+            </table>
+            <h2 style="
+              margin: 0 0 4px;
+              font-size: 11px;
+              font-weight: 700;
+              letter-spacing: 2px;
+              text-transform: uppercase;
+              color: #6c63ff;
+            ">⚡ Also Worth Reading</h2>
+            <p style="margin: 0; font-size: 12px; color: #4b4b6b;">Quick signals from the AI/ML world</p>
+          </td>
+        </tr>
+
+        <!-- BRIEF ITEMS TABLE -->
+        <tr>
+          <td style="padding: 20px 40px 0;">
+            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0"
+              style="
+                background-color: #1e1e2e;
+                border-radius: 12px;
+                border: 1px solid #2a2a3e;
+              ">
+              {% for item in digest.brief_items %}
+              <tr>
+                <td style="
+                  padding: 16px 20px;
+                  border-bottom: {% if not loop.last %}1px solid #2a2a3e{% else %}0{% endif %};
+                ">
+                  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                    <tr>
+                      <td width="8" valign="top" style="padding-top: 2px;">
+                        <div style="
+                          width: 6px;
+                          height: 6px;
+                          border-radius: 50%;
+                          background-color: #6c63ff;
+                          margin-top: 5px;
+                        ">&nbsp;</div>
+                      </td>
+                      <td style="padding-left: 12px;">
+                        <a href="{{ item.url }}" style="
+                          color: #c4c4d4;
+                          font-size: 14px;
+                          font-weight: 600;
+                          text-decoration: none;
+                          line-height: 1.4;
+                          display: block;
+                          margin-bottom: 4px;
+                        ">{{ item.title }}</a>
+                        <span style="font-size: 12px; color: #6b7280;">{{ item.source }} · </span>
+                        <span style="font-size: 13px; color: #7a7a9a; line-height: 1.5;">{{ item.blurb }}</span>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+              {% endfor %}
+            </table>
+          </td>
+        </tr>
+        {% endif %}
+
+        <!-- ─── CLOSING NOTE ─── -->
+        <tr>
+          <td style="padding: 36px 40px 0;">
+            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+              <tr>
+                <td style="border-top: 1px solid #2a2a3e; font-size: 0; padding-bottom: 28px;">&nbsp;</td>
+              </tr>
+            </table>
+            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0"
+              style="
+                background: linear-gradient(135deg, #1a1a2e, #16213e);
+                border-radius: 12px;
+                border: 1px solid #2a2a3e;
+                overflow: hidden;
+              ">
+              <tr>
+                <td style="padding: 24px 24px 24px 28px;">
+                  <p style="
+                    margin: 0 0 8px;
+                    font-size: 11px;
+                    font-weight: 700;
+                    letter-spacing: 2px;
+                    text-transform: uppercase;
+                    color: #a78bfa;
+                  ">🧠 Editor's Note</p>
+                  <p style="
+                    margin: 0;
+                    font-size: 14px;
+                    line-height: 1.8;
+                    color: #b4b4c8;
+                    font-style: italic;
+                  ">{{ digest.closing_note }}</p>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <!-- ─── FOOTER ─── -->
+        <tr>
+          <td style="padding: 36px 40px 32px;">
+            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+              <tr>
+                <td style="border-top: 1px solid #2a2a3e; padding-top: 28px; text-align: center;">
+                  <p style="
+                    margin: 0 0 6px;
+                    font-size: 18px;
+                    font-weight: 800;
+                    color: #6c63ff;
+                    letter-spacing: -0.3px;
+                  ">⚡ {{ newsletter_name }}</p>
+                  <p style="margin: 0 0 12px; font-size: 12px; color: #4b4b6b; line-height: 1.6;">
+                    Curated by ML · Summarised by Claude AI · Delivered daily
+                  </p>
+                  <p style="margin: 0; font-size: 11px; color: #3a3a5a;">
+                    You're receiving this because you subscribed to {{ newsletter_name }}.
+                  </p>
+                  <p style="margin: 6px 0 0; font-size: 11px; color: #3a3a5a;">
+                    Generated on {{ digest.generated_at.strftime('%Y-%m-%d %H:%M UTC') }}
+                  </p>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+      </table>
+      <!-- END CARD -->
+
+    </td>
+  </tr>
+</table>
+
+</body>
+</html>

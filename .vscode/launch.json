@@ -1,0 +1,50 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run newsletter (dry run)",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "synapse.main",
+      "cwd": "${workspaceFolder}/src",
+      "env": {
+        "DRY_RUN": "true"
+      },
+      "envFile": "${workspaceFolder}/.env",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Run newsletter (preview)",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "synapse.main",
+      "args": ["--preview"],
+      "cwd": "${workspaceFolder}/src",
+      "envFile": "${workspaceFolder}/.env",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Run web app (Flask)",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/web/app.py",
+      "cwd": "${workspaceFolder}/web",
+      "env": {
+        "FLASK_ENV": "development",
+        "FLASK_DEBUG": "1"
+      },
+      "envFile": "${workspaceFolder}/.env",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Run tests",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "pytest",
+      "args": ["tests/", "-v"],
+      "cwd": "${workspaceFolder}",
+      "envFile": "${workspaceFolder}/.env",
+      "console": "integratedTerminal"
+    }
+  ]
+}

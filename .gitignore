@@ -1,0 +1,38 @@
+# environment
+.env
+.env.local
+.env.*.local
+venv/
+.venv/
+env/
+
+# python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+
+# testing / coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# ML model cache (downloaded at runtime, no need to commit)
+.cache/
+~/.cache/huggingface/
+
+# preview files
+synapse_preview.html
+
+# editor
+.vscode/settings.json
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# vercel
+.vercel/

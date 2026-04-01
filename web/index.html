@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Synapse Daily — Daily AI & ML Newsletter</title>
+  <meta name="description" content="A free daily newsletter delivering the most important AI and machine learning news, curated by ML algorithms and summarised by Claude AI." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="static/css/style.css" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>" />
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <div class="container nav-inner">
+      <a href="/" class="logo">⚡ Synapse Daily</a>
+      <div class="nav-links">
+        <a href="#how-it-works">How it works</a>
+        <a href="#features">Features</a>
+        <a href="#subscribe" class="btn-nav">Subscribe free →</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="container">
+      <div class="badge">🤖 ML-curated · Claude-summarised · Free forever</div>
+
+      <h1>Stay sharp on AI &amp; ML<br /><span class="gradient-text">without the noise</span></h1>
+
+      <p class="hero-sub">
+        Every morning, Synapse Daily fetches articles from 10+ top AI &amp; ML sources,
+        ranks them by relevance using a sentence-transformer model, and delivers a clean,
+        readable digest straight to your inbox — no hype, no filler.
+      </p>
+
+      <!-- SUBSCRIBE FORM (hero) -->
+      <form class="hero-form" id="subscribe-form">
+        <input
+          type="email"
+          name="email"
+          id="email-input"
+          placeholder="you@example.com"
+          required
+          autocomplete="email"
+        />
+        <button type="submit" class="btn-primary" id="submit-btn">
+          Get daily digest →
+        </button>
+      </form>
+      <p class="hero-note">Free. No spam. Unsubscribe anytime.</p>
+
+      <!-- STATUS MESSAGE -->
+      <div id="form-status" class="form-status hidden"></div>
+
+      <!-- SAMPLE EMAIL PREVIEW CARD -->
+      <div class="email-preview">
+        <div class="preview-header">
+          <span class="preview-dot red"></span>
+          <span class="preview-dot yellow"></span>
+          <span class="preview-dot green"></span>
+          <span class="preview-title">Synapse Daily — Today's Digest</span>
+        </div>
+        <div class="preview-body">
+          <div class="preview-tag">🔥 Top Stories</div>
+          <div class="preview-story">
+            <div class="preview-story-source">Hugging Face Blog · Research</div>
+            <div class="preview-story-title">Llama 3.2 Vision achieves GPT-4V parity on 8 benchmarks</div>
+            <div class="preview-story-text">Meta's latest multimodal release closes the gap with proprietary models on OCR, chart understanding, and document QA tasks…</div>
+            <div class="preview-takeaway">
+              <span class="takeaway-label">Key takeaway</span>
+              Open-source multimodal models are now production-ready alternatives.
+            </div>
+          </div>
+          <div class="preview-more">+ 4 more top stories &amp; 8 brief items today</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="section" id="how-it-works">
+    <div class="container">
+      <h2 class="section-title">How it works</h2>
+      <p class="section-sub">Built with Python, sentence-transformers, and Claude API</p>
+
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">01</div>
+          <div class="step-content">
+            <h3>Fetch</h3>
+            <p>Every morning, the pipeline pulls fresh articles from 10+ RSS feeds — Hugging Face, arXiv, MIT Tech Review, VentureBeat, DeepMind, and more.</p>
+          </div>
+        </div>
+        <div class="step-arrow">→</div>
+        <div class="step">
+          <div class="step-num">02</div>
+          <div class="step-content">
+            <h3>Rank</h3>
+            <p>A local <code>all-MiniLM-L6-v2</code> sentence-transformer scores each article's AI/ML relevance and removes duplicates using cosine similarity.</p>
+          </div>
+        </div>
+        <div class="step-arrow">→</div>
+        <div class="step">
+          <div class="step-num">03</div>
+          <div class="step-content">
+            <h3>Summarise</h3>
+            <p>The top-ranked articles go to Claude, which writes concise summaries, key takeaways, and an editorial closing note — no filler, just signal.</p>
+          </div>
+        </div>
+        <div class="step-arrow">→</div>
+        <div class="step">
+          <div class="step-num">04</div>
+          <div class="step-content">
+            <h3>Deliver</h3>
+            <p>A clean HTML email lands in your inbox every morning at 7 AM UTC via GitHub Actions. Works in every email client.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section class="section section-dark" id="features">
+    <div class="container">
+      <h2 class="section-title">Why subscribe</h2>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">🧠</div>
+          <h3>ML-ranked, not editor-curated</h3>
+          <p>No human bias. Articles are ranked by semantic similarity to AI/ML topics using a real embedding model — the most relevant rises to the top.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">⚡</div>
+          <h3>Signal, not noise</h3>
+          <p>Near-duplicate articles are automatically removed. You get 5 deep-dives and ~8 quick signals — not 50 links to the same GPT wrapper launch.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📖</div>
+          <h3>Actually readable</h3>
+          <p>Claude writes 3-4 sentence summaries that explain <em>why</em> something matters — not what the press release says. Technical but accessible.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🔓</div>
+          <h3>Fully open source</h3>
+          <p>The entire pipeline is on GitHub. Fork it, modify the feeds, change the prompt, self-host it — it's yours.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📡</div>
+          <h3>10+ top sources</h3>
+          <p>Hugging Face, arXiv, Papers With Code, DeepMind, OpenAI, MIT Tech Review, VentureBeat, The Batch, The Gradient, and more.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🆓</div>
+          <h3>Free forever</h3>
+          <p>No paywalls, no premium tier, no sponsored content. Just a clean daily email from a side project that got out of hand.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SUBSCRIBE SECTION -->
+  <section class="section subscribe-section" id="subscribe">
+    <div class="container">
+      <h2 class="section-title">Get your daily dose of AI news</h2>
+      <p class="section-sub">Join engineers, researchers, and founders who read Synapse Daily every morning.</p>
+
+      <form class="subscribe-form" id="subscribe-form-2">
+        <div class="form-row">
+          <input
+            type="text"
+            name="name"
+            id="name-input"
+            placeholder="Your name (optional)"
+            autocomplete="name"
+          />
+          <input
+            type="email"
+            name="email"
+            id="email-input-2"
+            placeholder="you@example.com"
+            required
+            autocomplete="email"
+          />
+          <button type="submit" class="btn-primary" id="submit-btn-2">
+            Subscribe free
+          </button>
+        </div>
+        <p class="form-note">No spam. Unsubscribe anytime. Arrives 7 AM UTC.</p>
+      </form>
+
+      <div id="form-status-2" class="form-status hidden"></div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="container footer-inner">
+      <div class="footer-brand">
+        <span class="logo">⚡ Synapse Daily</span>
+        <p>ML-curated · Claude-summarised · Open source</p>
+      </div>
+      <div class="footer-links">
+        <a href="https://github.com/your-username/synapse-daily" target="_blank" rel="noopener">GitHub →</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="static/js/subscribe.js"></script>
+</body>
+</html>

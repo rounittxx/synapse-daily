@@ -1,0 +1,113 @@
+# ═══════════════════════════════════════════════════════════════
+#  Synapse Daily — GitHub Actions Workflow
+#
+#  Runs the full newsletter pipeline every day at 07:00 UTC.
+#  Can also be triggered manually via workflow_dispatch.
+#
+#  Required GitHub Secrets (Settings → Secrets → Actions):
+#    ANTHROPIC_API_KEY     — Your Anthropic API key
+#    GMAIL_ADDRESS         — Your Gmail address
+#    GMAIL_APP_PASSWORD    — Your 16-char Gmail App Password
+#    RECIPIENT_EMAILS      — Comma-separated list of recipient emails
+# ═══════════════════════════════════════════════════════════════
+
+name: Synapse Daily Newsletter
+
+on:
+  # Run every day at 07:00 UTC
+  schedule:
+    - cron: "0 7 * * *"
+
+  # Allow manual trigger from the GitHub Actions tab
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Dry run (render email but skip sending)"
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
+      preview:
+        description: "Save HTML preview as artifact"
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
+
+jobs:
+  send-newsletter:
+    name: Run Newsletter Pipeline
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      # ── 1. Checkout ────────────────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ── 2. Python setup ────────────────────────────────────────────
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      # ── 3. Install dependencies ────────────────────────────────────
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # ── 4. Cache sentence-transformers model ───────────────────────
+      # The all-MiniLM-L6-v2 model (~90 MB) is downloaded once and
+      # cached between runs to keep pipelines fast.
+      - name: Cache ML model
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/huggingface/hub
+          key: sentence-transformers-all-MiniLM-L6-v2-v1
+          restore-keys: |
+            sentence-transformers-all-MiniLM-L6-v2-
+
+      # ── 5. Run pipeline ────────────────────────────────────────────
+      - name: Run Synapse Daily pipeline
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GMAIL_ADDRESS: ${{ secrets.GMAIL_ADDRESS }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          RECIPIENT_EMAILS: ${{ secrets.RECIPIENT_EMAILS }}
+          DRY_RUN: ${{ github.event.inputs.dry_run || 'false' }}
+          NEWSLETTER_NAME: "Synapse Daily"
+          MAX_ARTICLES: "15"
+          TOP_STORIES: "5"
+        run: |
+          if [ "${{ github.event.inputs.preview }}" = "true" ]; then
+            python -m synapse.main --preview
+          else
+            python -m synapse.main
+          fi
+        working-directory: src
+
+      # ── 6. Upload HTML preview (optional) ─────────────────────────
+      - name: Upload HTML preview artifact
+        if: ${{ github.event.inputs.preview == 'true' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: synapse-email-preview
+          path: src/synapse_preview.html
+          retention-days: 3
+
+      # ── 7. Notify on failure ───────────────────────────────────────
+      - name: Report failure
+        if: failure()
+        run: |
+          echo "::error::Synapse Daily pipeline failed. Check logs above for details."
+          echo "Common issues:"
+          echo "  - ANTHROPIC_API_KEY not set or invalid"
+          echo "  - GMAIL_APP_PASSWORD wrong (must be App Password, not regular password)"
+          echo "  - RECIPIENT_EMAILS not set"
+          echo "  - RSS feeds temporarily unavailable"
