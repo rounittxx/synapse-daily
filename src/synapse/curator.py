@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import time
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import List
@@ -108,8 +109,16 @@ def curate(articles: List[Article]) -> CuratedDigest:
         },
     }
 
-    resp = requests.post(url, json=payload, timeout=120)
-    resp.raise_for_status()
+    # Retry up to 3 times with backoff for 429 rate limit errors
+    for attempt in range(3):
+        resp = requests.post(url, json=payload, timeout=120)
+        if resp.status_code == 429 and attempt < 2:
+            wait = 60 * (attempt + 1)  # 60s, 120s
+            log.warning(f"gemini rate limited (429), retrying in {wait}s (attempt {attempt + 1}/3)...")
+            time.sleep(wait)
+            continue
+        resp.raise_for_status()
+        break
 
     raw = resp.json()["candidates"][0]["content"]["parts"][0]["text"].strip()
 
