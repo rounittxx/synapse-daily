@@ -5,7 +5,7 @@
 #  Can also be triggered manually via workflow_dispatch.
 #
 #  Required GitHub Secrets (Settings → Secrets → Actions):
-#    GEMINI_API_KEY        — Your Google Gemini API key (free at aistudio.google.com)
+#    GROQ_API_KEY          — Your Groq API key (free at console.groq.com)
 #    GMAIL_ADDRESS         — Your Gmail address
 #    GMAIL_APP_PASSWORD    — Your 16-char Gmail App Password
 #    RECIPIENT_EMAILS      — Comma-separated list of recipient emails
@@ -76,7 +76,7 @@ jobs:
       # ── 5. Run pipeline ────────────────────────────────────────────
       - name: Run Synapse Daily pipeline
         env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           GMAIL_ADDRESS: ${{ secrets.GMAIL_ADDRESS }}
           GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
           RECIPIENT_EMAILS: ${{ secrets.RECIPIENT_EMAILS }}
@@ -107,7 +107,7 @@ jobs:
         run: |
           echo "::error::Synapse Daily pipeline failed. Check logs above for details."
           echo "Common issues:"
-          echo "  - GEMINI_API_KEY not set or invalid"
+          echo "  - GROQ_API_KEY not set or invalid"
           echo "  - GMAIL_APP_PASSWORD wrong (must be App Password, not regular password)"
           echo "  - RECIPIENT_EMAILS not set"
           echo "  - RSS feeds temporarily unavailable"
