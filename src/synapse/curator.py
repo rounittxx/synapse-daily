@@ -95,34 +95,37 @@ def curate(articles: List[Article]) -> CuratedDigest:
     top_n = min(config.top_stories, len(articles))
     prompt = _build_prompt(articles, top_n)
 
-    api_key = config.gemini_api_key
-    model = config.gemini_model
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
+    api_key = config.groq_api_key
+    model = config.groq_model
+    url = "https://api.groq.com/openai/v1/chat/completions"
 
-    log.info(f"calling gemini ({model}) with {len(articles)} articles...")
+    log.info(f"calling groq ({model}) with {len(articles)} articles...")
 
     payload = {
-        "contents": [{"parts": [{"text": prompt}]}],
-        "generationConfig": {
-            "temperature": 0.4,
-            "maxOutputTokens": 4096,
-        },
+        "model": model,
+        "messages": [{"role": "user", "content": prompt}],
+        "temperature": 0.4,
+        "max_tokens": 4096,
+    }
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json",
     }
 
     # Retry up to 3 times with backoff for 429 rate limit errors
     for attempt in range(3):
-        resp = requests.post(url, json=payload, timeout=120)
+        resp = requests.post(url, json=payload, headers=headers, timeout=120)
         if resp.status_code == 429 and attempt < 2:
-            wait = 60 * (attempt + 1)  # 60s, 120s
-            log.warning(f"gemini rate limited (429), retrying in {wait}s (attempt {attempt + 1}/3)...")
+            wait = 30 * (attempt + 1)  # 30s, 60s
+            log.warning(f"groq rate limited (429), retrying in {wait}s (attempt {attempt + 1}/3)...")
             time.sleep(wait)
             continue
         resp.raise_for_status()
         break
 
-    raw = resp.json()["candidates"][0]["content"]["parts"][0]["text"].strip()
+    raw = resp.json()["choices"][0]["message"]["content"].strip()
 
-    # gemini sometimes wraps in ```json ``` even when told not to
+    # LLMs sometimes wrap in ```json ``` even when told not to
     if raw.startswith("```"):
         raw = raw.split("```", 2)[1]
         if raw.startswith("json"):
@@ -132,7 +135,7 @@ def curate(articles: List[Article]) -> CuratedDigest:
     try:
         data = json.loads(raw)
     except json.JSONDecodeError as e:
-        log.error(f"gemini returned bad JSON: {e}\nRaw output:\n{raw[:500]}")
+        log.error(f"groq returned bad JSON: {e}\nRaw output:\n{raw[:500]}")
         raise
 
     top_stories = [
