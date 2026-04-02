@@ -8,7 +8,7 @@ load_dotenv()
 
 @dataclass
 class Config:
-    gemini_api_key: str = field(default_factory=lambda: os.environ["GEMINI_API_KEY"])
+    groq_api_key: str = field(default_factory=lambda: os.environ["GROQ_API_KEY"])
 
     gmail_address: str = field(default_factory=lambda: os.environ["GMAIL_ADDRESS"])
     gmail_app_password: str = field(default_factory=lambda: os.environ["GMAIL_APP_PASSWORD"])
@@ -28,8 +28,8 @@ class Config:
         default_factory=lambda: os.getenv("DRY_RUN", "false").lower() == "true"
     )
 
-    # gemini-2.0-flash: free tier, 1500 req/day, excellent quality
-    gemini_model: str = "gemini-2.0-flash"
+    # groq free tier: 14,400 req/day, 30 RPM, ultra-fast inference
+    groq_model: str = "llama-3.3-70b-versatile"
 
     # supabase for subscriber storage (used by the web app)
     supabase_url: str = field(default_factory=lambda: os.getenv("SUPABASE_URL", ""))
