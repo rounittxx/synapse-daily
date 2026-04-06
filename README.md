@@ -1,6 +1,6 @@
-# ⚡ Synapse Daily
+# Synapse Daily
 
-> A production-ready AI & ML newsletter pipeline that fetches, ranks, summarises, and emails a curated daily digest — fully automated via GitHub Actions.
+A production-ready AI/ML newsletter pipeline that fetches, ranks, summarises, and emails a curated daily digest — fully automated via GitHub Actions.
 
 ---
 
@@ -8,28 +8,28 @@
 
 ```
 RSS Feeds (10 sources)
-       ↓
-  collector.py      — Fetches & normalises articles
-       ↓
+       |
+  collector.py      — Fetches and normalises articles
+       |
   ml_ranker.py      — ML relevance scoring + deduplication
-       ↓             (sentence-transformers / all-MiniLM-L6-v2)
-  curator.py        — Claude AI writes the newsletter
-       ↓             (structured JSON output)
+       |               (sentence-transformers / all-MiniLM-L6-v2)
+  curator.py        — LLM writes the newsletter
+       |               (Groq / Llama 3.3 70B, structured JSON output)
   renderer.py       — Renders HTML + plain-text email
-       ↓             (Jinja2 + inline CSS)
-  mailer.py         — Sends via Gmail SMTP
-       ↓
-📧 Your inbox
+       |               (Jinja2 + inline CSS)
+  mailer.py         — Sends via Gmail SMTP to confirmed subscribers
+       |
+  Your inbox
 ```
 
 ---
 
 ## Quick Start
 
-### 1. Clone & install
+### 1. Clone and install
 
 ```bash
-git clone https://github.com/your-username/synapse-daily.git
+git clone https://github.com/rounittxx/synapse-daily.git
 cd synapse-daily
 pip install -r requirements.txt
 ```
@@ -44,16 +44,19 @@ Edit `.env`:
 
 | Variable | Description |
 |---|---|
-| `ANTHROPIC_API_KEY` | Your [Anthropic API key](https://console.anthropic.com/) |
+| `GROQ_API_KEY` | Your Groq API key — free at console.groq.com |
 | `GMAIL_ADDRESS` | Your Gmail address |
-| `GMAIL_APP_PASSWORD` | 16-char [Gmail App Password](https://myaccount.google.com/apppasswords) — **not** your regular password |
-| `RECIPIENT_EMAILS` | Comma-separated list of recipient emails |
-| `DRY_RUN` | Set `true` to skip sending (just renders the email) |
+| `GMAIL_APP_PASSWORD` | 16-char Gmail App Password (see section below) |
+| `RECIPIENT_EMAILS` | Comma-separated fallback recipients |
+| `SUPABASE_URL` | Your Supabase project URL |
+| `SUPABASE_KEY` | Your Supabase anon/service key |
+| `DRY_RUN` | Set `true` to render without sending |
 
 ### 3. Run locally
 
 ```bash
 cd src
+
 # Full pipeline
 python -m synapse.main
 
@@ -62,7 +65,6 @@ DRY_RUN=true python -m synapse.main
 
 # Save HTML preview to file
 python -m synapse.main --preview
-# → opens synapse_preview.html in your browser
 ```
 
 ### 4. Run tests
@@ -81,18 +83,40 @@ The newsletter runs automatically every day at **07:00 UTC** via GitHub Actions.
 ### Setup (one-time)
 
 1. Push this repo to GitHub.
-2. Go to **Settings → Secrets and variables → Actions → New repository secret** and add:
-   - `ANTHROPIC_API_KEY`
+2. Go to **Settings -> Secrets and variables -> Actions -> New repository secret** and add:
+   - `GROQ_API_KEY`
    - `GMAIL_ADDRESS`
    - `GMAIL_APP_PASSWORD`
    - `RECIPIENT_EMAILS`
-3. That's it. The workflow in `.github/workflows/daily_newsletter.yml` handles the rest.
+   - `SUPABASE_URL`
+   - `SUPABASE_KEY`
+3. The workflow in `.github/workflows/daily_newsletter.yml` handles the rest.
 
 ### Manual trigger
 
-Go to **Actions → Synapse Daily Newsletter → Run workflow** and optionally set:
-- **Dry run** — render but don't send
+Go to **Actions -> Synapse Daily Newsletter -> Run workflow** and optionally set:
+- **Dry run** — render but do not send
 - **Preview** — download the rendered HTML as an artifact
+
+---
+
+## Subscription Confirmation Flow
+
+When a visitor subscribes via the landing page:
+
+1. Their email is stored in Supabase with `confirmed = false` and a unique token.
+2. A confirmation email is sent to their inbox with a verify link.
+3. Clicking the link hits `/api/confirm?token=...` which sets `confirmed = true`.
+4. Only confirmed subscribers receive the daily newsletter.
+
+**Required Supabase table columns:**
+
+| Column | Type | Notes |
+|---|---|---|
+| `email` | text | unique |
+| `name` | text | nullable |
+| `confirmed` | boolean | default false |
+| `confirm_token` | text | nullable, cleared after confirmation |
 
 ---
 
@@ -100,26 +124,45 @@ Go to **Actions → Synapse Daily Newsletter → Run workflow** and optionally s
 
 ```
 synapse-daily/
-├── src/
-│   └── synapse/
-│       ├── __init__.py
-│       ├── config.py        ← All settings & RSS feed list
-│       ├── collector.py     ← RSS fetching & normalisation
-│       ├── ml_ranker.py     ← ML relevance scoring & dedup
-│       ├── curator.py       ← Claude AI curation
-│       ├── renderer.py      ← HTML/plain-text rendering
-│       └── main.py          ← Pipeline orchestration
-├── templates/
-│   └── email.html           ← Jinja2 HTML email template
-├── tests/
-│   └── test_pipeline.py     ← Unit tests (pytest)
-├── .github/
-│   └── workflows/
-│       └── daily_newsletter.yml  ← GitHub Actions cron workflow
-├── requirements.txt
-├── .env.example
-└── README.md
+|-- src/
+|   |-- synapse/
+|       |-- __init__.py
+|       |-- config.py        <- All settings and RSS feed list
+|       |-- collector.py     <- RSS fetching and normalisation
+|       |-- ml_ranker.py     <- ML relevance scoring and dedup
+|       |-- curator.py       <- LLM curation (Groq / Llama 3.3 70B)
+|       |-- renderer.py      <- HTML/plain-text rendering
+|       |-- main.py          <- Pipeline orchestration
+|-- templates/
+|   |-- email.html           <- Jinja2 HTML email template (compact)
+|-- api/
+|   |-- subscribe.py         <- POST /api/subscribe (Vercel serverless)
+|   |-- confirm.py           <- GET /api/confirm?token=... (Vercel serverless)
+|-- web/
+|   |-- index.html           <- Landing page
+|-- tests/
+|   |-- test_pipeline.py     <- Unit tests (pytest)
+|-- .github/
+|   |-- workflows/
+|       |-- daily_newsletter.yml  <- GitHub Actions cron workflow
+|-- requirements.txt
+|-- vercel.json
+|-- .env.example
+|-- README.md
 ```
+
+---
+
+## Gmail App Password Setup
+
+Regular Gmail passwords do not work for SMTP. You need an App Password:
+
+1. Go to myaccount.google.com/apppasswords
+2. Select Mail and your device
+3. Copy the 16-character password generated
+4. Use this as `GMAIL_APP_PASSWORD`
+
+Note: 2-Step Verification must be enabled on your Google Account.
 
 ---
 
@@ -132,6 +175,7 @@ Edit the `rss_feeds` list in `src/synapse/config.py`.
 ### Change the send time
 
 Edit the `cron` expression in `.github/workflows/daily_newsletter.yml`:
+
 ```yaml
 - cron: "0 7 * * *"   # 07:00 UTC daily
 ```
@@ -142,20 +186,7 @@ Set `MAX_ARTICLES` (total fetched) and `TOP_STORIES` (featured) in your `.env` o
 
 ### Change the ML model
 
-In `src/synapse/ml_ranker.py`, replace `"all-MiniLM-L6-v2"` with any [sentence-transformers compatible model](https://huggingface.co/sentence-transformers).
-
----
-
-## Gmail App Password Setup
-
-Regular Gmail passwords won't work. You need an **App Password**:
-
-1. Go to [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords)
-2. Select **Mail** and your device
-3. Copy the 16-character password generated
-4. Use this as `GMAIL_APP_PASSWORD`
-
-> **Note:** 2-Step Verification must be enabled on your Google Account.
+In `src/synapse/ml_ranker.py`, replace `"all-MiniLM-L6-v2"` with any sentence-transformers compatible model from huggingface.co/sentence-transformers.
 
 ---
 
@@ -167,8 +198,10 @@ Regular Gmail passwords won't work. You need an **App Password**:
 | RSS parsing | feedparser |
 | HTML parsing | BeautifulSoup4 + lxml |
 | ML ranking | sentence-transformers (all-MiniLM-L6-v2) |
-| AI curation | Anthropic Claude API |
+| LLM curation | Groq API / Llama 3.3 70B |
 | Templating | Jinja2 |
-| Email sending | Python smtplib (Gmail SMTP) |
+| Email sending | smtplib (Gmail SMTP) |
+| Subscriber storage | Supabase (PostgreSQL) |
 | Scheduling | GitHub Actions (cron) |
+| Hosting | Vercel (serverless functions + static) |
 | Testing | pytest |
