@@ -19,5 +19,12 @@
       "src": "/(.*)",
       "dest": "/web/$1"
     }
-  ]
+  ],
+  "env": {
+    "SUPABASE_URL": "@supabase_url",
+    "SUPABASE_KEY": "@supabase_key",
+    "GMAIL_ADDRESS": "@gmail_address",
+    "GMAIL_APP_PASSWORD": "@gmail_app_password",
+    "SITE_URL": "@site_url"
+  }
 }
