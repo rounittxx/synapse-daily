@@ -192,17 +192,33 @@ class handler(BaseHTTPRequestHandler):
                 return
 
             # Send confirmation email
+            email_sent = False
             if GMAIL_ADDRESS and GMAIL_APP_PASSWORD:
                 try:
                     _send_confirmation_email(email, name, result["token"])
+                    email_sent = True
                 except Exception as mail_err:
-                    # Log but don't fail the subscription itself
                     import sys
-                    print(f"[warn] confirmation email failed: {mail_err}", file=sys.stderr)
+                    print(
+                        f"[error] confirmation email failed for {email}: {type(mail_err).__name__}: {mail_err}",
+                        file=sys.stderr,
+                    )
+            else:
+                import sys
+                print(
+                    "[error] GMAIL_ADDRESS or GMAIL_APP_PASSWORD env var not set — cannot send confirmation email",
+                    file=sys.stderr,
+                )
 
-            self._respond(201, {
-                "message": "Almost there! Check your inbox to confirm your subscription."
-            })
+            if email_sent:
+                self._respond(201, {
+                    "message": "Almost there! Check your inbox to confirm your subscription."
+                })
+            else:
+                # Subscription saved but email couldn't be sent — tell the user
+                self._respond(201, {
+                    "message": "You're subscribed! However, we couldn't send a confirmation email right now. Please contact support."
+                })
 
         except RuntimeError:
             self._respond(503, {"error": "Service temporarily unavailable."})
@@ -212,15 +228,22 @@ class handler(BaseHTTPRequestHandler):
             self._respond(500, {"error": "Something went wrong. Please try again."})
 
     def do_OPTIONS(self):
-        self._respond(204, {})
+        self.send_response(204)
+        self._add_cors_headers()
+        self.send_header("Content-Length", "0")
+        self.end_headers()
+
+    def _add_cors_headers(self):
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Methods", "POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type")
 
     def _respond(self, status: int, data: dict):
         body_bytes = json.dumps(data).encode("utf-8")
         self.send_response(status)
         self.send_header("Content-Type", "application/json")
         self.send_header("Content-Length", str(len(body_bytes)))
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        self._add_cors_headers()
         self.end_headers()
         self.wfile.write(body_bytes)
 

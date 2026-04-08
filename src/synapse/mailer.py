@@ -23,7 +23,7 @@ def _make_message(digest: CuratedDigest, to: str) -> MIMEMultipart:
 
 
 def get_subscribers() -> List[str]:
-    """Pull subscriber emails from Supabase if configured, else fall back to env var."""
+    """Pull confirmed subscriber emails from Supabase if configured, else fall back to env var."""
     if config.supabase_url and config.supabase_key:
         try:
             import httpx
@@ -37,10 +37,21 @@ def get_subscribers() -> List[str]:
                 timeout=10,
             )
             resp.raise_for_status()
-            return [row["email"] for row in resp.json()]
+            supabase_emails = [row["email"] for row in resp.json()]
+            if supabase_emails:
+                return supabase_emails
+            log.warning(
+                "supabase returned 0 confirmed subscribers — "
+                "users may not have clicked the confirmation link; "
+                "falling back to RECIPIENT_EMAILS env var"
+            )
         except Exception as e:
             log.warning(f"supabase fetch failed, falling back to env: {e}")
 
+    if not config.recipient_emails:
+        log.error(
+            "no recipients found — set RECIPIENT_EMAILS env var or add confirmed subscribers in Supabase"
+        )
     return config.recipient_emails
 
 
