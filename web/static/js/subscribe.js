@@ -35,7 +35,7 @@ function handleForm(formId, emailId, btnId, statusId, nameId = null) {
       const data = await resp.json();
 
       if (resp.ok) {
-        showStatus(status, "success", "🎉 You're subscribed! Check your inbox for a confirmation.");
+        showStatus(status, "success", " You're subscribed! Check your inbox for a confirmation.");
         form.reset();
       } else {
         showStatus(status, "error", data.error || "Something went wrong. Try again.");
