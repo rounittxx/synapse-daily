@@ -17,12 +17,14 @@ import json
 import os
 import re
 import smtplib
+import sys
+import traceback
+import urllib.error
+import urllib.request
 import uuid
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from http.server import BaseHTTPRequestHandler
-
-import httpx
 
 SUPABASE_URL      = os.environ.get("SUPABASE_URL", "")
 SUPABASE_KEY      = os.environ.get("SUPABASE_KEY", "")
@@ -35,6 +37,36 @@ def _valid_email(email: str) -> bool:
     return bool(re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", email))
 
 
+class _SupabaseError(Exception):
+    def __init__(self, status: int, body: str):
+        super().__init__(f"supabase HTTP {status}: {body[:200]}")
+        self.status = status
+        self.body = body
+
+
+def _supabase_post(path: str, payload: dict) -> int:
+    """POST JSON to Supabase via stdlib urllib. Returns HTTP status code."""
+    url = f"{SUPABASE_URL.rstrip('/')}{path}"
+    data = json.dumps(payload).encode("utf-8")
+    req = urllib.request.Request(
+        url,
+        data=data,
+        method="POST",
+        headers={
+            "apikey": SUPABASE_KEY,
+            "Authorization": f"Bearer {SUPABASE_KEY}",
+            "Content-Type": "application/json",
+            "Prefer": "return=minimal",
+        },
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            return resp.getcode()
+    except urllib.error.HTTPError as e:
+        # 409 (duplicate) is expected — surface it without raising
+        return e.code
+
+
 def _add_subscriber(email: str, name: str) -> dict:
     """Insert subscriber with confirmed=False and a unique token. Returns token."""
     if not SUPABASE_URL or not SUPABASE_KEY:
@@ -42,30 +74,22 @@ def _add_subscriber(email: str, name: str) -> dict:
 
     token = str(uuid.uuid4())
 
-    headers = {
-        "apikey": SUPABASE_KEY,
-        "Authorization": f"Bearer {SUPABASE_KEY}",
-        "Content-Type": "application/json",
-        "Prefer": "return=minimal",
-    }
-
-    resp = httpx.post(
-        f"{SUPABASE_URL}/rest/v1/subscribers",
-        headers=headers,
-        json={
+    status = _supabase_post(
+        "/rest/v1/subscribers",
+        {
             "email": email,
             "name": name or None,
             "confirmed": False,
             "confirm_token": token,
         },
-        timeout=10,
     )
 
-    # 409 = already subscribed (unique constraint on email)
-    if resp.status_code == 409:
+    if status == 409:
         return {"already_subscribed": True}
 
-    resp.raise_for_status()
+    if status not in (200, 201, 204):
+        raise _SupabaseError(status, "")
+
     return {"ok": True, "token": token}
 
 
@@ -198,13 +222,12 @@ class handler(BaseHTTPRequestHandler):
                     _send_confirmation_email(email, name, result["token"])
                     email_sent = True
                 except Exception as mail_err:
-                    import sys
                     print(
                         f"[error] confirmation email failed for {email}: {type(mail_err).__name__}: {mail_err}",
                         file=sys.stderr,
                     )
+                    traceback.print_exc(file=sys.stderr)
             else:
-                import sys
                 print(
                     "[error] GMAIL_ADDRESS or GMAIL_APP_PASSWORD env var not set — cannot send confirmation email",
                     file=sys.stderr,
@@ -215,24 +238,30 @@ class handler(BaseHTTPRequestHandler):
                     "message": "Almost there! Check your inbox to confirm your subscription."
                 })
             else:
-                # Subscription saved but email couldn't be sent — tell the user
                 self._respond(201, {
                     "message": "You're subscribed! However, we couldn't send a confirmation email right now. Please contact support."
                 })
 
         except RuntimeError as e:
-            import sys, traceback
             print(f"[error] RuntimeError in /api/subscribe: {e}", file=sys.stderr)
             traceback.print_exc(file=sys.stderr)
             self._respond(503, {"error": "Service temporarily unavailable."})
-        except httpx.HTTPStatusError as e:
-            import sys, traceback
-            print(f"[error] HTTPStatusError in /api/subscribe: status={e.response.status_code} body={e.response.text!r}", file=sys.stderr)
+        except _SupabaseError as e:
+            print(
+                f"[error] SupabaseError in /api/subscribe: status={e.status} body={e.body!r}",
+                file=sys.stderr,
+            )
+            traceback.print_exc(file=sys.stderr)
+            self._respond(502, {"error": "Could not save subscription. Try again."})
+        except urllib.error.URLError as e:
+            print(f"[error] URLError in /api/subscribe: {e}", file=sys.stderr)
             traceback.print_exc(file=sys.stderr)
             self._respond(502, {"error": "Could not save subscription. Try again."})
         except Exception as e:
-            import sys, traceback
-            print(f"[error] Unhandled {type(e).__name__} in /api/subscribe: {e}", file=sys.stderr)
+            print(
+                f"[error] Unhandled {type(e).__name__} in /api/subscribe: {e}",
+                file=sys.stderr,
+            )
             traceback.print_exc(file=sys.stderr)
             self._respond(500, {"error": "Something went wrong. Please try again."})
 

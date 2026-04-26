@@ -1,1 +1,3 @@
-httpx>=0.27.0
+# /api/* serverless functions use only Python stdlib (urllib, smtplib).
+# httpx was removed because Vercel's vendored httpx hits "[Errno 16] Device
+# or resource busy" on TCP connect inside the AWS Lambda runtime.
