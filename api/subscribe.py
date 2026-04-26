@@ -220,11 +220,20 @@ class handler(BaseHTTPRequestHandler):
                     "message": "You're subscribed! However, we couldn't send a confirmation email right now. Please contact support."
                 })
 
-        except RuntimeError:
+        except RuntimeError as e:
+            import sys, traceback
+            print(f"[error] RuntimeError in /api/subscribe: {e}", file=sys.stderr)
+            traceback.print_exc(file=sys.stderr)
             self._respond(503, {"error": "Service temporarily unavailable."})
-        except httpx.HTTPStatusError:
+        except httpx.HTTPStatusError as e:
+            import sys, traceback
+            print(f"[error] HTTPStatusError in /api/subscribe: status={e.response.status_code} body={e.response.text!r}", file=sys.stderr)
+            traceback.print_exc(file=sys.stderr)
             self._respond(502, {"error": "Could not save subscription. Try again."})
-        except Exception:
+        except Exception as e:
+            import sys, traceback
+            print(f"[error] Unhandled {type(e).__name__} in /api/subscribe: {e}", file=sys.stderr)
+            traceback.print_exc(file=sys.stderr)
             self._respond(500, {"error": "Something went wrong. Please try again."})
 
     def do_OPTIONS(self):
