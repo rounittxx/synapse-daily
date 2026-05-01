@@ -263,7 +263,7 @@ class handler(BaseHTTPRequestHandler):
                 file=sys.stderr,
             )
             traceback.print_exc(file=sys.stderr)
-            self._respond(500, {"error": "Something went wrong. Please try again."})
+            self._respond(500, {"error": f"Something went wrong. Detail: {type(e).__name__}: {str(e)}"})
 
     def do_OPTIONS(self):
         self.send_response(204)
